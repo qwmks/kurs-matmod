@@ -7,10 +7,26 @@ def model(m0=915,mFuel=650,F=4*10**(4)+9000,burn=5,d1=0.4,d2=4,h0=0,vx0=200):
     print(F)
     GConst=6.67430*10**(-11)
     MEarth=5.9722*10**(24)
-    r0=6378137
-    mEnd=m0-mFuel
-    
     beta=5.6*10**(-5)
+    r0=6378137
+    c=0.045
+    dt=0.05
+    rho0=1.23
+    tNoFuel=-1
+    fall=False
+
+    mEnd=m0-mFuel
+    s=np.pi*d1*d1/4
+    vx=vx0
+    h=h0
+    g=GConst*MEarth/(r0+h)**2
+    v=0.0
+    c2=1.28
+    s2=np.pi*d2*d2/4
+    t=0
+    m=m0
+    x=0
+    k2=c*rho0*10**(-beta*h)*s
     H=[]
     T=[]
     V=[]
@@ -19,33 +35,20 @@ def model(m0=915,mFuel=650,F=4*10**(4)+9000,burn=5,d1=0.4,d2=4,h0=0,vx0=200):
     X=[]
     K=[]
     G=[]
-    t=0
-    m=m0
-    x=0
-    c=0.045
-    dt=0.05
-    rho0=1.23
-    s=np.pi*d1*d1/4
-    vx=vx0
-    h=h0
-    g=GConst*MEarth/(r0+h)**2
-    v=0.0
-    c2=1.28
-    s2=np.pi*d2*d2/4
     M.append(m)
     H.append(h)
     V.append(v)
     Vx.append(vx)
     X.append(x)
     T.append(t)
-    K.append(c*rho0*10**(-beta*h)*s)
+    K.append(k2)
     G.append(g)
-    tNoFuel=-1
-    fall=False
+    tFall=-1
     while True:
         g=GConst*MEarth/(r0+h)**2
         if m>=mEnd:
-            m=m0-burn*t
+            if F!=0:
+                m=m0-burn*t
             tNoFuel=t
         else:
             F=0
@@ -53,7 +56,7 @@ def model(m0=915,mFuel=650,F=4*10**(4)+9000,burn=5,d1=0.4,d2=4,h0=0,vx0=200):
             k2=c*rho0*10**(-beta*h)*s
             # v=v+((F-m*g-m*k2*np.sqrt(v**2+vx**2)*v)/m)*dt
             v=v+((F-m*g-m*k2*v*v)/m)*dt
-            if v<=0.1 and t>1:
+            if v<=0.1 and t>1 and F==0:
                 tFall=t
                 F=0
                 fall=True
@@ -72,13 +75,15 @@ def model(m0=915,mFuel=650,F=4*10**(4)+9000,burn=5,d1=0.4,d2=4,h0=0,vx0=200):
         X.append(x)
         K.append(k2)
         G.append(g)
-        if (h<0):
+        if (h<0 ):
             break
     if tNoFuel==-1:
         tNoFuel=max(T)
+    if tFall==-1:
+        tFall=max(T)
     return M,T,H,V,Vx,X,dt,tNoFuel,tFall,K,G
 
-# M,T,H,V,Vx,X,dt,tNoFuel,tFall,K=model(915,650,4*10**(4)+9000,5,0.4,4,0,0)
+# M,T,H,V,Vx,X,dt,tNoFuel,tFall,K,G=model(915,650,4*10**(4)+9000,5,10,4,0,0)
 # plt.plot(T,H)
 # plt.xlabel('T')
 # plt.ylabel('H')
